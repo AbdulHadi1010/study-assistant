@@ -40,7 +40,7 @@ study-assistant/
 │   ├── test_task_tools.py       # mocked Todoist HTTP
 │   └── test_handler.py          # routing + response format
 └── docs/
-    ├── SPEC.md  TECH_STACK.md  AGENT.md  INSTRUCTIONS.md  TESTING.md  WORKSHOP.md  PROMPT.md
+    ├── SPEC.md  TECH_STACK.md  AGENT.md  INSTRUCTIONS.md  TESTING.md  PROMPT.md
     ├── VERIFIED.md  DECISIONS.md
     └── architecture.md + architecture.png   # diagram (scripts/make_diagram.py) + ReAct explanation
 ```
