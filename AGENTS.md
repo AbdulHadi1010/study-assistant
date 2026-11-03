@@ -3,7 +3,7 @@
 ## What this project is
 A personal AI study assistant for university students, built with Amazon Bedrock (Nova Pro, Converse API tool loop), AWS Lambda, DynamoDB, Secrets Manager, Todoist and a local Streamlit chat app. It is the codebase for a beginner workshop, so **clarity beats cleverness**.
 
-Full details: `docs/SPEC.md`, `docs/TECH_STACK.md`, `docs/AGENT.md`, `docs/INSTRUCTIONS.md`, `docs/TESTING.md`, `docs/WORKSHOP.md`.
+Full details: `docs/SPEC.md`, `docs/TECH_STACK.md`, `docs/AGENT.md`, `docs/INSTRUCTIONS.md`, `docs/TESTING.md`. The instructor run-sheet is kept outside the repo (students must not see it).
 
 ## Audience
 First- and second-year CS students who know basic Python. They have never written a Lambda or used Bedrock. Every file they open must be readable top to bottom.

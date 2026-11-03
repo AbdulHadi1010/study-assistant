@@ -97,7 +97,7 @@ Try: *"My courses are OS (3 credits: quizzes 15, assignments 15, midterm 30, fin
 | `infra/` | CloudFormation template: everything AWS creates for you |
 | `scripts/` | Deploy, check, test and clean-up scripts |
 | `tests/` | Unit tests (no AWS needed) |
-| `docs/` | Spec, design decisions, workshop run-sheet, IAM policy, architecture diagram |
+| `docs/` | Spec, design decisions, IAM policy, architecture diagram |
 
 ## Extend it yourself
 `record_absence` and `daily_brief` are already coded in the Lambda; wire them into your own prompts. Next ideas: voice input (Transcribe), Google Calendar / Google Tasks via OAuth, deploying Streamlit, Bedrock Guardrails, agent long-term memory.
