@@ -1,9 +1,10 @@
-"""Generate starter/ from the finished solution.
+"""Generate starter/ from the finished solution (run on the `solution` branch).
 
 Copies lambda/, app/ and agent/ into starter/ and replaces every block between
 `# >>> LIVE: <name>` and `# <<< LIVE: <name>` with a TODO and a
-NotImplementedError, so the instructor can type those blocks live. Markers may
-carry a hint: `# >>> LIVE: grade_needed | hint: earned vs remaining weight`.
+NotImplementedError. The `master` branch is this starter: during the workshop
+each blank is filled in by copying the finished file from the `solution` branch.
+Markers may carry a hint: `# >>> LIVE: grade_needed | hint: earned vs remaining weight`.
 Re-running overwrites starter/ (it is generated; do not edit it by hand).
 """
 import re
@@ -36,7 +37,8 @@ def replace_live_blocks(text: str, filename: str = "") -> str:
         output.append(f"{indent}# TODO (live): {name}")
         if hint:
             output.append(f"{indent}# Hint: {hint}")
-        output.append(f'{indent}raise NotImplementedError("{name}: we write this together in the workshop")')
+        output.append(f'{indent}raise NotImplementedError("{name} is filled in during the workshop: '
+                      f'git checkout origin/solution -- {filename}")')
     return "\n".join(output) + "\n"
 
 
@@ -49,7 +51,8 @@ def make_starter(root: Path = ROOT) -> list[Path]:
         for source in sorted((root / folder).glob("*.py")):
             destination = target / folder / source.name
             destination.parent.mkdir(parents=True, exist_ok=True)
-            destination.write_text(replace_live_blocks(source.read_text(encoding="utf-8"), source.name), encoding="utf-8")
+            destination.write_text(replace_live_blocks(source.read_text(encoding="utf-8"), f"{folder}/{source.name}"),
+                                   encoding="utf-8")
             written.append(destination)
         for data_file in sorted((root / folder).glob("*.json")):  # e.g. agent/functions.json: copied as is
             shutil.copy(data_file, target / folder / data_file.name)

@@ -1,7 +1,7 @@
 # CLAUDE.md: Study Assistant
 
 ## What this project is
-A personal AI study assistant for university students, built with Amazon Bedrock Agents, AWS Lambda, DynamoDB, Secrets Manager, Todoist and a local Streamlit chat app. It is the codebase for a beginner workshop, so **clarity beats cleverness**.
+A personal AI study assistant for university students, built with Amazon Bedrock (Nova Pro, Converse API tool loop), AWS Lambda, DynamoDB, Secrets Manager, Todoist and a local Streamlit chat app. It is the codebase for a beginner workshop, so **clarity beats cleverness**.
 
 Full details: `docs/SPEC.md`, `docs/TECH_STACK.md`, `docs/AGENT.md`, `docs/INSTRUCTIONS.md`, `docs/TESTING.md`, `docs/WORKSHOP.md`.
 
@@ -18,15 +18,17 @@ First- and second-year CS students who know basic Python. They have never writte
 7. **Least-privilege IAM.** Every policy scoped to the specific resource ARNs created by the stack.
 8. **Friendly errors.** Tools never crash the agent: catch exceptions and return a clear text message the agent can relay ("I couldn't find a course called 'OS'. Your saved courses are: ...").
 9. **Idempotent scripts.** Running setup or deploy twice must not break anything.
-10. **Live-coding markers.** Code that will be typed live in the workshop is wrapped in `# >>> LIVE: <name>` / `# <<< LIVE: <name>` markers (see `docs/INSTRUCTIONS.md`).
+10. **Workshop markers.** Code that is filled in step by step during the workshop is wrapped in `# >>> LIVE: <name>` / `# <<< LIVE: <name>` markers. The `solution` branch has the finished code; `master` is generated from it with the blocks blanked (see `docs/INSTRUCTIONS.md`). Make every code change on `solution` first, then regenerate `master`.
 
-## Commands (to be created)
+## Commands
+- `python scripts/check_setup.py`: pre-flight check (credentials, region, model access, Todoist)
 - `python scripts/deploy_stack.py`: deploy the CloudFormation stack (asks for the Todoist token)
 - `python scripts/deploy_lambda.py`: push updated Lambda code
-- `python scripts/setup_agent.py`: create/update and prepare the Bedrock Agent + alias
-- `streamlit run app/streamlit_app.py`: run the chat app
-- `python scripts/e2e_test.py`: scripted conversation against the deployed agent
-- `python scripts/cleanup.py`: delete the agent and the stack
+- `streamlit run app/streamlit_app.py`: run the chat app (the agent loop runs inside it)
+- `python scripts/e2e_test.py`: scripted conversation against the deployed tools
+- `python scripts/cleanup.py`: delete the stack
+- `python scripts/make_starter.py`: regenerate the blanked workshop files (solution branch only)
+- `python scripts/make_diagram.py`: regenerate `docs/architecture.png` (needs Graphviz)
 - `pytest`: unit tests
 
 ## Decisions and verification log

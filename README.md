@@ -1,59 +1,103 @@
 # Study Assistant
 
-A personal AI study assistant built on Amazon Bedrock (Nova + the Converse API tool loop), AWS Lambda, DynamoDB and Todoist. Chat with it to save your courses, check what grade you need, and manage your real Todoist to-do list.
+A personal AI study assistant built on Amazon Bedrock (Nova Pro + the Converse API tool loop), AWS Lambda, DynamoDB and Todoist. Chat with it to save your courses, check what grade you need, and manage your real Todoist to-do list.
 
 ![Architecture](docs/architecture.png)
 
 More detail: [docs/architecture.md](docs/architecture.md).
 
-## Prerequisites
-- AWS account, AWS CLI configured (`aws configure`), Bedrock access to Amazon Nova Pro in your region, and an IAM user allowed to call Bedrock and invoke Lambda (see [docs/iam-policy.json](docs/iam-policy.json))
-- Python 3.10+
-- A free Todoist account and API token (Todoist: Settings -> Integrations -> Developer)
+## Two branches
+| Branch | What is in it | Who uses it |
+|---|---|---|
+| `master` | The workshop version. Everything works except a few blanks marked `# TODO (live)` that we fill in together. | Clone this for the workshop |
+| `solution` | The finished, working app. | Catching up, or using the app on your own |
 
-## Setup
+You never type code in the workshop. Each blank is filled by copying the finished file from `solution`:
+```
+git checkout origin/solution -- lambda/task_tools.py
+```
+That same command is how you catch up if you fall behind.
+
+## Before the workshop (about 30 minutes, at home)
 All commands work the same in PowerShell, macOS and Linux unless shown otherwise.
 
+**1. Install the tools**
+- [Python 3.10+](https://www.python.org/downloads/) (on Windows tick "Add python.exe to PATH")
+- [Git](https://git-scm.com/downloads)
+- [AWS CLI v2](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+
+**2. Create an IAM user for the workshop** (AWS console)
+1. IAM -> Users -> **Create user**, name it `study-assistant-workshop`.
+2. Permissions: **Attach policies directly** -> **Create policy** -> JSON tab -> paste the contents of [docs/iam-policy.json](docs/iam-policy.json) -> name it `StudyAssistantWorkshop` -> create, then attach it to the user.
+3. Open the user -> Security credentials -> **Create access key** -> "Command Line Interface (CLI)". Keep the two keys for the next step.
+
+The policy only allows what this project needs (its own stack, table, Lambda, secret, plus Bedrock and Polly).
+
+**3. Configure the AWS CLI**
 ```
-pip install -r requirements.txt
+aws configure
+```
+Paste the two keys, region `us-east-1`, output `json`.
+
+**4. Get a Todoist token**
+Create a free [Todoist](https://todoist.com) account -> Settings -> Integrations -> Developer -> copy the API token. You will paste it once, during the workshop.
+
+**5. Clone and install**
+```
+git clone https://github.com/AbdulHadi1010/study-assistant.git
+cd study-assistant
+python -m venv .venv
+```
+Activate it, Windows: `.venv\Scripts\activate`; macOS/Linux: `source .venv/bin/activate`. Then:
+```
+pip install -r requirements-dev.txt
+```
+
+**6. Check everything**
+```
 python scripts/check_setup.py
 ```
-Fix anything marked ❌ before continuing.
+Fix anything marked ❌ (each line tells you how) until it is all ✅.
 
-## Build it
+## During the workshop
 | Step | Command | What it does |
 |---|---|---|
-| 1 | `python scripts/deploy_stack.py` | Creates the table, secret, Lambda and role (asks for your Todoist token, input hidden) and pushes the Lambda code |
-| 2 | `python scripts/deploy_lambda.py` | Re-pushes `lambda/` after you edit it |
-| 3 | `streamlit run app/streamlit_app.py` | Opens the chat app. The agent loop runs inside it |
-| 4 | `python scripts/e2e_test.py` | Optional: runs a scripted conversation (costs a few cents) |
-| 5 | `python scripts/cleanup.py` | **Deletes everything** so nothing keeps costing money |
+| 1 | `python scripts/deploy_stack.py` | Creates the DynamoDB table, the Todoist secret, the Lambda and its role (asks for your Todoist token, input hidden) |
+| 2 | `pytest` | Shows what is still blank (red tests) |
+| 3 | `git checkout origin/solution -- lambda/handler.py lambda/academic_tools.py lambda/task_tools.py` | Fills in the tools (we do these one file at a time) |
+| 4 | `python scripts/deploy_lambda.py` | Pushes the finished tools to AWS |
+| 5 | `git checkout origin/solution -- app/agent_client.py` | Fills in the agent loop |
+| 6 | `streamlit run app/streamlit_app.py` | Opens the chat app |
+| 7 | `python scripts/cleanup.py` | **Deletes everything** so nothing keeps costing money |
 
-> **Why no Bedrock Agent?** AWS closed Bedrock Agents Classic to accounts with no recent agent usage (July 2026), so `CreateAgent` fails on new accounts. We run the same reason-act-observe loop ourselves with the Converse API instead; see `ask_agent()` in `app/agent_client.py`.
+Try: *"My courses are OS (3 credits: quizzes 15, assignments 15, midterm 30, final 40)."* Then record marks, ask *"What do I need in the OS final to get an A-?"*, and *"Add my DB assignment due next Friday, high priority."* Turn on **Show agent reasoning** to watch the agent pick tools. Turn on **Speak replies (Polly)** to hear the answers.
 
-Try: *"My courses are OS (3 credits: quizzes 15, assignments 15, midterm 30, final 40)."* Then record marks, ask *"What do I need in the OS final to get an A-?"*, and *"Add my DB assignment due next Friday, high priority."* Turn on **Show agent reasoning** to watch the agent pick tools. Answers stream in word by word. Turn on **Speak replies (Polly)** to hear them: each sentence is sent to Amazon Polly as soon as it is written (default voice Ruth, `generative` engine; set `"polly_engine": "neural"` in `config.json` for a faster start).
+> **Why no Bedrock Agent?** AWS closed Bedrock Agents Classic to accounts with no recent agent usage (July 2026), so `CreateAgent` fails on new accounts. We run the same reason-act-observe loop ourselves with the Converse API instead; see `stream_agent()` in `app/agent_client.py`.
 
 ## Troubleshooting
 | Problem | Fix |
 |---|---|
-| `config.json not found` / tools not deployed | Run step 1 above |
+| `NotImplementedError: ... filled in during the workshop` | Run the `git checkout origin/solution -- <file>` command it prints |
+| `config.json not found` / tools not deployed | Run `python scripts/deploy_stack.py` |
 | `No AWS credentials found` | `aws configure` |
-| Access denied / model access | Bedrock console -> Model access -> enable the model in your region |
+| Access denied / model access | Bedrock console -> Model access -> enable Amazon Nova Pro in `us-east-1` |
+| `lambda:InvokeFunction` access denied | Your IAM user is missing the policy from `docs/iam-policy.json` |
 | Throttling | Wait a few seconds and retry |
 | "Your Todoist token looks invalid" | Re-run `python scripts/deploy_stack.py` and paste a fresh token |
 | Region mismatch | Make `config.json` and `aws configure get region` agree |
 | Changed Lambda code but nothing happens | `python scripts/deploy_lambda.py` |
-| Changed agent instructions or `functions.json` | Nothing to deploy: just restart/refresh the app |
-| `lambda:InvokeFunction` access denied | Your IAM user needs permission to invoke the Lambda (see `docs/iam-policy.json`) |
-
-## Run the tests (no AWS needed)
-```
-pip install -r requirements-dev.txt
-pytest
-```
+| Changed agent instructions or `functions.json` | Nothing to deploy: just restart the app |
 
 ## Repository map
-`lambda/` tool code, `agent/` agent definition, `app/` Streamlit UI, `infra/` CloudFormation, `scripts/` setup and tests, `starter/` generated workshop skeleton (`python scripts/make_starter.py`).
+| Folder | What is in it |
+|---|---|
+| `lambda/` | The tools (runs in AWS Lambda): courses and grades in DynamoDB, tasks in Todoist |
+| `agent/` | What the model is told: system prompt and the list of tools |
+| `app/` | Streamlit chat UI and the agent loop (runs on your laptop) |
+| `infra/` | CloudFormation template: everything AWS creates for you |
+| `scripts/` | Deploy, check, test and clean-up scripts |
+| `tests/` | Unit tests (no AWS needed) |
+| `docs/` | Spec, design decisions, workshop run-sheet, IAM policy, architecture diagram |
 
 ## Extend it yourself
 `record_absence` and `daily_brief` are already coded in the Lambda; wire them into your own prompts. Next ideas: voice input (Transcribe), Google Calendar / Google Tasks via OAuth, deploying Streamlit, Bedrock Guardrails, agent long-term memory.

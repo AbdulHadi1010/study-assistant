@@ -5,7 +5,7 @@
 ```
 study-assistant/
 ├── README.md                    # student-facing: prerequisites, step-by-step, troubleshooting
-├── CLAUDE.md  SPEC.md  TECH_STACK.md  AGENT.md  INSTRUCTIONS.md  TESTING.md  WORKSHOP.md
+├── CLAUDE.md  AGENTS.md          # rules for AI coding assistants (same content)
 ├── config.example.json
 ├── requirements.txt             # boto3, streamlit
 ├── requirements-dev.txt         # + pytest, moto
@@ -39,10 +39,10 @@ study-assistant/
 │   ├── test_academic_tools.py   # moto DynamoDB
 │   ├── test_task_tools.py       # mocked Todoist HTTP
 │   └── test_handler.py          # routing + response format
-├── docs/
-│   ├── VERIFIED.md  DECISIONS.md
-│   └── architecture.md          # Mermaid diagram + ReAct explanation for slides
-└── starter/                     # generated: same tree as lambda/ + app/ with LIVE blocks replaced by TODOs
+└── docs/
+    ├── SPEC.md  TECH_STACK.md  AGENT.md  INSTRUCTIONS.md  TESTING.md  WORKSHOP.md  PROMPT.md
+    ├── VERIFIED.md  DECISIONS.md
+    └── architecture.md + architecture.png   # diagram (scripts/make_diagram.py) + ReAct explanation
 ```
 
 ## 2. Build phases (in order)
@@ -87,18 +87,40 @@ Run the checks listed in `PROMPT.md` step 2. Write `docs/VERIFIED.md` before wri
 ### Phase 6: Scripts and docs
 `check_setup.py`, `e2e_test.py`, `cleanup.py`, `README.md` (student-facing; PowerShell and bash commands side by side), `docs/architecture.md`.
 
-### Phase 7: Starter generation
-`scripts/make_starter.py` copies `lambda/` and `app/` into `starter/`, replacing every block between `# >>> LIVE: <name>` and `# <<< LIVE: <name>` with:
+### Phase 7: Starter generation (two branches)
+The repo has two branches:
+- `solution`: the finished, working code (all tests pass).
+- `master`: what students clone. Same files, but every LIVE block is blanked.
+
+Nobody types code in the workshop. At each step students fill in a blank by copying the finished file from `solution` (`git checkout origin/solution -- lambda/task_tools.py`), and the instructor walks through it.
+
+`scripts/make_starter.py` copies `lambda/`, `app/` and `agent/` into `starter/`, replacing every block between `# >>> LIVE: <name>` and `# <<< LIVE: <name>` with:
 
 ```python
 # TODO (live): <name>
-# <one-line hint from the marker's hint, if given>
-raise NotImplementedError("<name>: we write this together in the workshop")
+# Hint: <one-line hint from the marker, if given>
+raise NotImplementedError("<name> is filled in during the workshop: git checkout origin/solution -- <folder>/<file>")
 ```
 
 Markers may carry a hint: `# >>> LIVE: grade_needed | hint: earned so far vs remaining weight`. The starter must still import and pass `python -m py_compile`.
 
-**Mark as LIVE (the parts typed in the session):**
+**Updating the code (maintainers).** Always change `solution` first, then regenerate `master`:
+```
+git switch solution
+# edit, then: pytest
+git commit -am "..."
+python scripts/make_starter.py          # writes starter/ (git-ignored, so it survives the branch switch)
+git switch master
+git checkout solution -- .              # take every file from solution...
+python -c "import shutil; [shutil.copytree(f'starter/{d}', d, dirs_exist_ok=True) for d in ('lambda', 'app', 'agent')]"
+git rm -q scripts/make_starter.py tests/test_starter.py
+git add -A
+git commit -m "Regenerate workshop starter"
+git push origin solution master
+```
+The `python -c` line puts the blanked files back over the finished ones. `make_starter.py` and `tests/test_starter.py` live only on `solution`.
+
+**Blocks marked LIVE (filled in during the session):**
 - `academic_tools.save_course`, `academic_tools.grade_needed` (body only)
 - `task_tools.add_task`, `task_tools.list_tasks`, `task_tools.break_down_project` (body only)
 - the routing dict in `handler.py`
