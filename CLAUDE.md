@@ -34,3 +34,36 @@ First- and second-year CS students who know basic Python. They have never writte
 ## Decisions and verification log
 - Record design decisions in `docs/DECISIONS.md`.
 - Record facts verified against live AWS / Todoist docs in `docs/VERIFIED.md`.
+
+## Filling in the workshop blanks (for AI coding assistants)
+On the `master` branch, seven blocks are blank. Each looks like this:
+```python
+# TODO (live): add_task
+# Hint: map priority, prefix [COURSE], call create_task
+raise NotImplementedError("add_task is filled in during the workshop: ...")
+```
+Find them all with a search for `TODO (live)`. If the student asks you to fill them in:
+
+1. **Write the code yourself from the docs and tests below.** Do not copy from the `solution` branch unless the student explicitly asks for that shortcut (`git checkout origin/solution -- <file>`).
+2. **Replace only the three placeholder lines.** Everything around a blank (imports, helpers, docstrings, variables set just before it) is already correct; use it. Do not edit the tests.
+3. **Follow the golden rules above:** short, readable, commented for beginners, standard library + boto3 only in `lambda/`.
+4. **Verify with `pytest`** until everything passes, then explain each filled block to the student in plain words.
+5. **If the stack is deployed**, run `python scripts/deploy_lambda.py` after changing anything in `lambda/`.
+
+| Blank | File | Read first | Tests that define it |
+|---|---|---|---|
+| `routes` | `lambda/handler.py` | `agent/functions.json` (the 11 tool names), `docs/AGENT.md` §3 | `tests/test_handler.py` |
+| `save_course` | `lambda/academic_tools.py` | `docs/SPEC.md` §4.1 and §5 (data model), helpers in the same file (`parse_json`, `get_table`, `find_course`, `to_decimal`, `course_summary`) | `test_save_and_list`, `test_weights_*`, `test_invalid_json_is_friendly`, `test_saving_twice_updates_and_keeps_marks` |
+| `grade_needed` | `lambda/academic_tools.py` | `docs/SPEC.md` §6 (grading rules), `lambda/grading.py`, helpers `find_course`, `course_not_found`, `fmt` | `test_grade_needed_worked_example`, `test_unknown_course_lists_saved_courses`, `test_close_match_is_tolerated` |
+| `add_task` | `lambda/task_tools.py` | `docs/SPEC.md` §4.2, helpers `course_prefix`, `create_task_forgiving`, `PRIORITY_TO_API` | `test_add_task_*`, `test_unreadable_due_date_still_creates_the_task` |
+| `list_tasks` | `lambda/task_tools.py` | `build_filter`, `describe_task`, `todoist_client.filter_tasks` (the date-range branch above the blank is already done) | `test_list_tasks_*` |
+| `break_down_project` | `lambda/task_tools.py` | `academic_tools.parse_json`, `create_task_forgiving` with `parent_id` | `test_break_down_*`, `test_other_todoist_errors_are_not_swallowed` |
+| `ask_agent` | `app/agent_client.py`, inside `stream_agent()` | the `stream_agent` docstring, `read_stream`, `ThinkingFilter`, `run_tool_calls`, `tool_config`, `system_prompt` | `tests/test_agent_client.py` |
+
+**Notes for the `ask_agent` blank** (the agent loop; `config`, `bedrock`, `lambda_client`, `messages`, `steps` and `visible` are set just before it):
+- Loop at most `MAX_TOOL_ROUNDS` times. Each round calls `bedrock.converse_stream(modelId=config["model_id"], system=[{"text": system_prompt()}], messages=messages, toolConfig=tool_config(), inferenceConfig=MODEL_SETTINGS)` and reads it with `read_stream()`.
+- Pass every text piece through a fresh `ThinkingFilter` per round (`feed`, then `flush` on the final `"message"` item) and yield `{"type": "text", "text": piece}`. Strip leading whitespace from the very first visible text. If an earlier round already showed text, start this round's text with `"\n\n"`. Add what was shown to `visible`.
+- Append the assistant message to `messages`. If `stop_reason != "tool_use"`, stop: that was the final answer.
+- Otherwise yield `{"type": "working", "tools": [...names...]}`, call `run_tool_calls(lambda_client, config, assistant, student_id, steps)`, append `{"role": "user", "content": results}` to `messages`, and yield `{"type": "step", "step": s}` for each new entry in `steps`.
+- If all rounds are used up, add an assistant message saying it is "going in circles" (ask the student to rephrase), add it to `visible`, and yield it as text.
+- The code after the blank saves the session and yields the `done` event. Leave it as it is.
