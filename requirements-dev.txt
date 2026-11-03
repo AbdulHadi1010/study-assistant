@@ -1,3 +1,4 @@
 -r requirements.txt
 pytest>=8.0
 moto[dynamodb]>=5.0
+diagrams>=0.24
