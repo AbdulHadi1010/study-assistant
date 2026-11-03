@@ -18,6 +18,11 @@ git checkout origin/solution -- lambda/task_tools.py
 ```
 That same command is how you catch up if you fall behind.
 
+**Want an AI assistant to fill in the blanks instead?** Open the repo in Claude Code or Codex and ask:
+> *"Fill in the workshop blanks following the instructions in CLAUDE.md (AGENTS.md), make pytest pass, and explain each one to me."*
+
+Both tools read those files automatically. The files list every blank, what to read for it, and which tests prove it works.
+
 ## Before the workshop (about 30 minutes, at home)
 All commands work the same in PowerShell, macOS and Linux unless shown otherwise.
 
