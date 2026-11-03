@@ -1,0 +1,230 @@
+{
+  "action_groups": [
+    {
+      "name": "AcademicTools",
+      "description": "Save and read the student's courses and marks, and calculate grades and GPA.",
+      "functions": [
+        {
+          "name": "save_course",
+          "description": "Save or update one course with its credit hours and grading breakdown.",
+          "parameters": {
+            "course_name": {
+              "type": "string",
+              "required": true,
+              "description": "Course name or code, e.g. OS or Calculus"
+            },
+            "credit_hours": {
+              "type": "integer",
+              "required": true,
+              "description": "Credit hours, usually 1 to 4"
+            },
+            "grading_breakdown": {
+              "type": "string",
+              "required": true,
+              "description": "JSON object of component to weight percent, weights sum to 100, e.g. {\"quizzes\":15,\"midterm\":35,\"final\":50}",
+              "json_schema": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "list_courses",
+          "description": "List all saved courses with credits, grading breakdown, marks so far and current weighted percentage.",
+          "parameters": {}
+        },
+        {
+          "name": "record_marks",
+          "description": "Record the marks obtained in one graded component of a course.",
+          "parameters": {
+            "course_name": {
+              "type": "string",
+              "required": true,
+              "description": "Course name or code, e.g. OS"
+            },
+            "component": {
+              "type": "string",
+              "required": true,
+              "description": "Component name matching the grading breakdown, e.g. midterm"
+            },
+            "obtained": {
+              "type": "number",
+              "required": true,
+              "description": "Marks the student obtained"
+            },
+            "total": {
+              "type": "number",
+              "required": true,
+              "description": "Total marks available for this component"
+            }
+          }
+        },
+        {
+          "name": "grade_needed",
+          "description": "Calculate the percentage needed on the remaining ungraded components to reach a target letter grade.",
+          "parameters": {
+            "course_name": {
+              "type": "string",
+              "required": true,
+              "description": "Course name or code, e.g. OS"
+            },
+            "target_grade": {
+              "type": "string",
+              "required": true,
+              "description": "Letter grade, e.g. A-, B+"
+            }
+          }
+        },
+        {
+          "name": "calculate_gpa",
+          "description": "Calculate the semester GPA from saved courses, optionally using projected grades.",
+          "parameters": {
+            "projected_grades": {
+              "type": "string",
+              "required": false,
+              "description": "JSON object of course name to letter grade, e.g. {\"OS\":\"B+\"}",
+              "json_schema": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "record_absence",
+          "description": "Record missed classes for a course and report absences used vs allowed.",
+          "parameters": {
+            "course_name": {
+              "type": "string",
+              "required": true,
+              "description": "Course name or code, e.g. OS"
+            },
+            "count": {
+              "type": "integer",
+              "required": false,
+              "description": "Number of classes missed, default 1"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "TaskTools",
+      "description": "Manage the student's tasks in their Todoist to-do list.",
+      "functions": [
+        {
+          "name": "add_task",
+          "description": "Add a task to the student's Todoist.",
+          "parameters": {
+            "title": {
+              "type": "string",
+              "required": true,
+              "description": "Short task title"
+            },
+            "due": {
+              "type": "string",
+              "required": false,
+              "description": "Due date: a simple phrase such as next Friday, or YYYY-MM-DD"
+            },
+            "priority": {
+              "type": "string",
+              "required": false,
+              "description": "low, medium, high or urgent"
+            },
+            "course_name": {
+              "type": "string",
+              "required": false,
+              "description": "Course this task belongs to, e.g. OS"
+            },
+            "description": {
+              "type": "string",
+              "required": false,
+              "description": "Extra details for the task"
+            }
+          }
+        },
+        {
+          "name": "list_tasks",
+          "description": "List the student's active Todoist tasks.",
+          "parameters": {
+            "filter": {
+              "type": "string",
+              "required": false,
+              "description": "today, overdue, week (next 7 days), this week, next week (both Monday to Sunday), or a course name. Default: week"
+            },
+            "start_date": {
+              "type": "string",
+              "required": false,
+              "description": "Optional first day of a custom date range, as YYYY-MM-DD. Use with end_date instead of filter."
+            },
+            "end_date": {
+              "type": "string",
+              "required": false,
+              "description": "Optional last day of a custom date range, as YYYY-MM-DD"
+            }
+          }
+        },
+        {
+          "name": "complete_task",
+          "description": "Mark a task as done by its title.",
+          "parameters": {
+            "title": {
+              "type": "string",
+              "required": true,
+              "description": "Full or partial task title"
+            }
+          }
+        },
+        {
+          "name": "break_down_project",
+          "description": "Create a parent task and dated subtasks for a project or exam plan.",
+          "parameters": {
+            "project_name": {
+              "type": "string",
+              "required": true,
+              "description": "Name of the project or exam, e.g. DB project"
+            },
+            "steps": {
+              "type": "string",
+              "required": true,
+              "description": "JSON array of {\"title\": str, \"due\": \"YYYY-MM-DD\"}, 4 to 6 steps in date order",
+              "json_schema": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "title": {
+                      "type": "string"
+                    },
+                    "due": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "due"
+                  ]
+                }
+              }
+            },
+            "course_name": {
+              "type": "string",
+              "required": false,
+              "description": "Course this project belongs to, e.g. DB"
+            }
+          }
+        },
+        {
+          "name": "daily_brief",
+          "description": "Summarise today's and overdue tasks plus courses at risk.",
+          "parameters": {}
+        }
+      ]
+    }
+  ]
+}

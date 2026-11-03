@@ -1,0 +1,92 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Study Assistant - DynamoDB table, Todoist secret, tools Lambda, and IAM roles (the app runs the agent loop itself with the Bedrock Converse API)
+
+Parameters:
+  TodoistToken:
+    Type: String
+    NoEcho: true   # hides the value in the console and in API responses
+    Description: Your personal Todoist API token (Todoist Settings -> Integrations -> Developer)
+
+Resources:
+  # --- Data -----------------------------------------------------------------
+  CoursesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      # No fixed name: CloudFormation generates one, so the stack can be deleted and recreated freely.
+      BillingMode: PAY_PER_REQUEST   # on-demand: no cost when idle
+      AttributeDefinitions:
+        - { AttributeName: student_id, AttributeType: S }
+        - { AttributeName: course_name, AttributeType: S }
+      KeySchema:
+        - { AttributeName: student_id, KeyType: HASH }
+        - { AttributeName: course_name, KeyType: RANGE }
+
+  TodoistSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Description: Todoist API token for the Study Assistant
+      SecretString: !Ref TodoistToken
+
+  # --- Lambda ---------------------------------------------------------------
+  # Created here (not left to Lambda) so the 7-day retention applies and cleanup deletes it.
+  ToolsLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-tools"
+      RetentionInDays: 7
+
+  ToolsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: tools-least-privilege
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: [dynamodb:GetItem, dynamodb:PutItem, dynamodb:UpdateItem, dynamodb:Query]
+                Resource: !GetAtt CoursesTable.Arn
+              - Effect: Allow
+                Action: secretsmanager:GetSecretValue
+                Resource: !Ref TodoistSecret   # for a secret, Ref returns the ARN
+              - Effect: Allow
+                Action: [logs:CreateLogStream, logs:PutLogEvents]
+                # Built by hand (not !GetAtt ToolsLogGroup.Arn): GetAtt makes CloudFormation call
+                # logs:DescribeLogGroups as *you*, which restricted users may not be allowed to do.
+                Resource: !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}-tools:*"
+
+  ToolsFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: ToolsLogGroup
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-tools"
+      Runtime: python3.12
+      Handler: handler.lambda_handler
+      Role: !GetAtt ToolsRole.Arn
+      Timeout: 30
+      MemorySize: 256
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref CoursesTable
+          TODOIST_SECRET_ARN: !Ref TodoistSecret
+      # Placeholder only: scripts/deploy_lambda.py uploads the real code (lambda/*.py) right after this stack is created.
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+              return {"error": "placeholder - run scripts/deploy_lambda.py"}
+
+Outputs:
+  TableName:
+    Value: !Ref CoursesTable
+  LambdaFunctionName:
+    Value: !Ref ToolsFunction
+  LambdaFunctionArn:
+    Value: !GetAtt ToolsFunction.Arn
+  TodoistSecretArn:
+    Value: !Ref TodoistSecret

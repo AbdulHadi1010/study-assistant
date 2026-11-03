@@ -1,0 +1,10 @@
+{
+  "region": "us-east-1",
+  "stack_name": "study-assistant",
+  "model_id": "us.amazon.nova-pro-v1:0",
+  "lambda_function_name": "",
+  "table_name": "",
+  "todoist_secret_arn": "",
+  "polly_voice": "Ruth",
+  "polly_engine": "generative"
+}

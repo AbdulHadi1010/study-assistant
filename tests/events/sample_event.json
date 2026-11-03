@@ -1,0 +1,19 @@
+{
+  "messageVersion": "1.0",
+  "agent": {
+    "name": "study-assistant",
+    "id": "AGENTID123",
+    "alias": "TSTALIASID",
+    "version": "DRAFT"
+  },
+  "inputText": "What do I need in the OS final to get an A-?",
+  "sessionId": "11111111-2222-3333-4444-555555555555",
+  "actionGroup": "AcademicTools",
+  "function": "grade_needed",
+  "parameters": [
+    {"name": "course_name", "type": "string", "value": "OS"},
+    {"name": "target_grade", "type": "string", "value": "A-"}
+  ],
+  "sessionAttributes": {"student_id": "me"},
+  "promptSessionAttributes": {}
+}
