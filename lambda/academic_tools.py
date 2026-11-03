@@ -105,44 +105,9 @@ def course_summary(course: dict) -> str:
 
 def save_course(student_id: str, params: dict) -> str:
     """Create or update a course. Weights must sum to 100 (+/- 0.5)."""
-    # >>> LIVE: save_course | hint: parse JSON breakdown, check weights sum to 100, put_item
-    name = params.get("course_name", "").strip()
-    breakdown = parse_json(params.get("grading_breakdown", ""), dict)
-    if not name:
-        return "I need a course name to save it."
-    try:
-        credits = int(float(params.get("credit_hours", "")))
-    except ValueError:
-        return "I need the credit hours as a number (for example 3)."
-    if not breakdown or not all(isinstance(w, (int, float)) and w > 0 for w in breakdown.values()):
-        return ('I couldn\'t read the grading breakdown. Please give it like '
-                '{"quizzes": 15, "midterm": 35, "final": 50} with positive weights.')
-    total = sum(breakdown.values())
-    if abs(total - 100) > 0.5:
-        return f"The grading weights add up to {fmt(total)}, but they must add up to 100. Can you check them?"
-
-    existing = find_course(student_id, name)
-    old_components = existing["components"] if existing else {}
-    components = {}
-    for component, weight in breakdown.items():
-        # Keep marks already recorded for components that still exist.
-        old = old_components.get(component, {})
-        components[component] = {"weight": to_decimal(weight), "obtained": old.get("obtained"), "total": old.get("total")}
-
-    key = existing["course_name"] if existing else normalise_name(name)
-    get_table().put_item(Item={
-        "student_id": student_id,
-        "course_name": key,
-        "display_name": existing["display_name"] if existing else name,
-        "credit_hours": credits,
-        "components": components,
-        "absences": existing["absences"] if existing else 0,
-        "max_absences": existing["max_absences"] if existing else DEFAULT_MAX_ABSENCES,
-        "updated_at": datetime.now(timezone.utc).isoformat(),
-    })
-    verb = "Updated" if existing else "Saved"
-    return f"{verb} {name}: {credits} credits, grading {json.dumps(breakdown)}."
-    # <<< LIVE: save_course
+    # TODO (live): save_course
+    # Hint: parse JSON breakdown, check weights sum to 100, put_item
+    raise NotImplementedError("save_course is filled in during the workshop: git checkout origin/solution -- lambda/academic_tools.py")
 
 
 def list_courses(student_id: str, params: dict) -> str:
@@ -184,26 +149,9 @@ def grade_needed(student_id: str, params: dict) -> str:
     course = find_course(student_id, params.get("course_name", ""))
     if course is None:
         return course_not_found(student_id, params.get("course_name", ""))
-    # >>> LIVE: grade_needed | hint: earned so far vs remaining weight
-    result = grading.grade_needed(course["components"], params.get("target_grade", ""))
-    name = course["display_name"]
-    status = result["status"]
-    if status == "bad_grade":
-        return f"'{params.get('target_grade', '')}' isn't a grade I know. Use something like A-, B+ or C."
-    if status == "complete":
-        return (f"All of {name} is graded: final {fmt(result['final_percent'])}% = {result['final_grade']}. "
-                + grading.ESTIMATE_NOTE)
-    note = grading.ESTIMATE_NOTE
-    if status == "secured":
-        return (f"You've already secured {result['target']} in {name} "
-                f"(you have {fmt(result['earned'])} points and {result['target']} needs {fmt(result['cutoff'])} in total). {note}")
-    if status == "unreachable":
-        return (f"{result['target']} isn't reachable in {name}: even 100% on the rest gives {fmt(result['best_percent'])}%, "
-                f"which is a {result['best_grade']}. {note}")
-    return (f"For {result['target']} in {name} you need {fmt(result['needed_percent'])}% on the remaining "
-            f"{fmt(result['remaining_weight'])}% of the grade that is still ungraded. You already have "
-            f"{fmt(result['earned'])} points and {result['target']} needs {fmt(result['cutoff'])} in total. {note}")
-    # <<< LIVE: grade_needed
+    # TODO (live): grade_needed
+    # Hint: earned so far vs remaining weight
+    raise NotImplementedError("grade_needed is filled in during the workshop: git checkout origin/solution -- lambda/academic_tools.py")
 
 
 def calculate_gpa(student_id: str, params: dict) -> str:

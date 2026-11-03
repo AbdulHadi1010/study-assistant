@@ -213,40 +213,9 @@ def stream_agent(message: str, session_id: str, student_id: str):
     messages = list(SESSIONS.get(session_id, [])) + [{"role": "user", "content": [{"text": message}]}]
     steps: list[dict] = []
     visible: list[str] = []  # everything the student has seen so far
-    # >>> LIVE: ask_agent | hint: call bedrock.converse_stream in a loop; run toolUse blocks; stop when the model answers
-    for _ in range(MAX_TOOL_ROUNDS):
-        response = bedrock.converse_stream(modelId=config["model_id"], system=[{"text": system_prompt()}],
-                                           messages=messages, toolConfig=tool_config(), inferenceConfig=MODEL_SETTINGS)
-        thinking_filter, round_text = ThinkingFilter(), []
-        for kind, value in read_stream(response):
-            if kind == "text":
-                piece = thinking_filter.feed(value)
-            else:
-                assistant, stop_reason = value
-                piece = thinking_filter.flush()
-            if piece and not (round_text or visible):
-                piece = piece.lstrip()                 # nothing shown yet: drop leading blank space
-            elif piece and not round_text:
-                piece = "\n\n" + piece.lstrip()        # a later round that also has text: start a new paragraph
-            if piece:
-                round_text.append(piece)
-                yield {"type": "text", "text": piece}
-        visible.extend(round_text)
-        messages.append(assistant)
-        if stop_reason != "tool_use":
-            break  # no more tools needed: what we just streamed is the final answer
-        first_new_step = len(steps)
-        yield {"type": "working", "tools": [b["toolUse"]["name"] for b in assistant["content"] if "toolUse" in b]}
-        results = run_tool_calls(lambda_client, config, assistant, student_id, steps)
-        messages.append({"role": "user", "content": results})  # the "observe" step
-        for step in steps[first_new_step:]:
-            yield {"type": "step", "step": step}
-    else:
-        stuck = "I got stuck going in circles on that. Could you rephrase or break it into smaller requests?"
-        messages.append({"role": "assistant", "content": [{"text": stuck}]})
-        visible.append(stuck)
-        yield {"type": "text", "text": stuck}
-    # <<< LIVE: ask_agent
+    # TODO (live): ask_agent
+    # Hint: call bedrock.converse_stream in a loop; run toolUse blocks; stop when the model answers
+    raise NotImplementedError("ask_agent is filled in during the workshop: git checkout origin/solution -- app/agent_client.py")
     SESSIONS[session_id] = messages  # only saved on success, so a failed call can't corrupt the history
     yield {"type": "done", "reply": "".join(visible).strip(), "steps": steps}
 

@@ -18,21 +18,9 @@ logger.setLevel(logging.INFO)
 
 def build_routes() -> dict:
     """Map the function name the model picked to the Python function that runs it."""
-    # >>> LIVE: routes | hint: dict of function name -> callable(student_id, params)
-    return {
-        "save_course": academic_tools.save_course,
-        "list_courses": academic_tools.list_courses,
-        "record_marks": academic_tools.record_marks,
-        "grade_needed": academic_tools.grade_needed,
-        "calculate_gpa": academic_tools.calculate_gpa,
-        "record_absence": academic_tools.record_absence,
-        "add_task": task_tools.add_task,
-        "list_tasks": task_tools.list_tasks,
-        "complete_task": task_tools.complete_task,
-        "break_down_project": task_tools.break_down_project,
-        "daily_brief": task_tools.daily_brief,
-    }
-    # <<< LIVE: routes
+    # TODO (live): routes
+    # Hint: dict of function name -> callable(student_id, params)
+    raise NotImplementedError("routes is filled in during the workshop: git checkout origin/solution -- lambda/handler.py")
 
 
 def run_tool(event: dict) -> str:

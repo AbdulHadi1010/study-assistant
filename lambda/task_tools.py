@@ -54,22 +54,9 @@ def create_task_forgiving(title: str, due_string: str = "", **fields) -> tuple[d
 
 def add_task(student_id: str, params: dict) -> str:
     """Create one Todoist task."""
-    # >>> LIVE: add_task | hint: map priority, prefix [COURSE], call create_task
-    title = params.get("title", "").strip()
-    if not title:
-        return "I need a title for the task."
-    priority_word = params.get("priority", "").strip().lower()
-    task, due_understood = create_task_forgiving(
-        course_prefix(params.get("course_name", "")) + title,
-        description=params.get("description", ""),
-        due_string=params.get("due", "").strip(),
-        priority=PRIORITY_TO_API.get(priority_word),
-    )
-    due = (task.get("due") or {}).get("date")
-    if not due_understood:
-        return f"Added '{task['content']}' to Todoist, but I couldn't understand the due date '{params['due']}', so it has no due date."
-    return f"Added '{task['content']}' to Todoist" + (f", due {due}." if due else " (no due date).")
-    # <<< LIVE: add_task
+    # TODO (live): add_task
+    # Hint: map priority, prefix [COURSE], call create_task
+    raise NotImplementedError("add_task is filled in during the workshop: git checkout origin/solution -- lambda/task_tools.py")
 
 
 def build_filter(filter_text: str) -> str:
@@ -119,13 +106,9 @@ def list_tasks(student_id: str, params: dict) -> str:
         return str(error)
     if dates:
         return list_tasks_between(*dates)
-    # >>> LIVE: list_tasks | hint: build_filter, filter_tasks, one line per task
-    query = build_filter(params.get("filter", ""))
-    tasks = todoist_client.filter_tasks(query)
-    if not tasks:
-        return f"No active tasks found for '{params.get('filter') or 'week'}'."
-    return f"{len(tasks)} task(s):\n" + "\n".join(describe_task(t) for t in tasks)
-    # <<< LIVE: list_tasks
+    # TODO (live): list_tasks
+    # Hint: build_filter, filter_tasks, one line per task
+    raise NotImplementedError("list_tasks is filled in during the workshop: git checkout origin/solution -- lambda/task_tools.py")
 
 
 def complete_task(student_id: str, params: dict) -> str:
@@ -147,23 +130,9 @@ def complete_task(student_id: str, params: dict) -> str:
 
 def break_down_project(student_id: str, params: dict) -> str:
     """Create a parent task and dated subtasks (steps arrive as a JSON string)."""
-    # >>> LIVE: break_down_project | hint: parse steps, create parent, subtasks with parent_id
-    steps = academic_tools.parse_json(params.get("steps", ""), list)
-    if not steps or not all(isinstance(s, dict) and s.get("title") for s in steps):
-        return 'I couldn\'t read the steps. They should look like [{"title": "Draft", "due": "Nov 5"}].'
-    prefix = course_prefix(params.get("course_name", ""))
-    parent, _ = create_task_forgiving(prefix + params.get("project_name", "Project"), due_string=steps[-1].get("due", ""))
-    created = []  # (step, due_was_understood)
-    try:
-        for step in steps:
-            _, understood = create_task_forgiving(prefix + step["title"], due_string=step.get("due", ""), parent_id=parent["id"])
-            created.append((step, understood))
-    except TodoistError as error:
-        return f"Created '{parent['content']}' with {len(created)} of {len(steps)} steps, then hit a problem: {error}"
-    lines = "\n".join(f"- {s['title']} (due: {s.get('due') or 'no date'})" if understood
-                      else f"- {s['title']} (no due date: I couldn't understand '{s['due']}')" for s, understood in created)
-    return f"Created '{parent['content']}' with {len(steps)} subtasks:\n{lines}"
-    # <<< LIVE: break_down_project
+    # TODO (live): break_down_project
+    # Hint: parse steps, create parent, subtasks with parent_id
+    raise NotImplementedError("break_down_project is filled in during the workshop: git checkout origin/solution -- lambda/task_tools.py")
 
 
 def daily_brief(student_id: str, params: dict) -> str:
