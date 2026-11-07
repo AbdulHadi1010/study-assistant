@@ -68,7 +68,8 @@ def check_model_access(config: dict) -> bool:
 def check_lambda(config: dict) -> bool:
     name = config.get("lambda_function_name")
     if not name:
-        return report(False, "Tools Lambda not deployed yet", "Run `python scripts/deploy_stack.py`.")
+        print("⏭️  Tools Lambda not deployed yet: that is fine, we deploy it together in the workshop")
+        return True
     try:
         boto3.client("lambda", region_name=config["region"]).get_function_configuration(FunctionName=name)
     except (BotoCoreError, ClientError) as error:
